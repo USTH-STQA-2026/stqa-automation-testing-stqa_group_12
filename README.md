@@ -25,9 +25,9 @@ Sử dụng **Playwright + Python** để kiểm thử hệ thống Mượn sác
 | --- | ---- | --------- | ----------- |
 | 1   |2410888|Lê Tấn Thành| Nhóm trưởng |
 | 2   |2410248|Hoàng Công Dương|Thành viên  |
-| 3   |Nguyễn An Khánh|2410456| Thành viên  |
-| 4   |Nguyễn Gia Long|2410545| Thành viên  |
-| 5   |Vũ Anh Quân|2410842| Thành viên  |
+| 3   |2410456|Nguyễn An Khánh| Thành viên  |
+| 4   |2410545|Nguyễn Gia Long| Thành viên  |
+| 5   |2410842|Vũ Anh Quân| Thành viên  |
 ---
 
 ## 📖 Trước khi bắt đầu — Bối cảnh / Before You Start — Context
