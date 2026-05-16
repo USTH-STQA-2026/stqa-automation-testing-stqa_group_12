@@ -23,11 +23,11 @@ Sử dụng **Playwright + Python** để kiểm thử hệ thống Mượn sác
 
 | #   | MSSV | Họ và tên | Vai trò     |
 | --- | ---- | --------- | ----------- |
-| 1   |      |           | Nhóm trưởng |
-| 2   |      |           | Thành viên  |
-| 3   |      |           | Thành viên  |
-| 4   |      |           | Thành viên  |
-
+| 1   |2410888|Lê Tấn Thành| Nhóm trưởng |
+| 2   |2410248|Hoàng Công Dương|Thành viên  |
+| 3   |Nguyễn An Khánh|2410456| Thành viên  |
+| 4   |Nguyễn Gia Long|2410545| Thành viên  |
+| 5   |Vũ Anh Quân|2410842| Thành viên  |
 ---
 
 ## 📖 Trước khi bắt đầu — Bối cảnh / Before You Start — Context
