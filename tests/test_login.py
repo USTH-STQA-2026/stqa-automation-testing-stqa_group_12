@@ -12,7 +12,6 @@ Students must complete TC-02 and TC-03.
 Sinh viên cần hoàn thành TC-02 và TC-03.*)
 """
 import os
-import pytest
 from conftest import enable_flutter_semantics, flutter_fill, flutter_click_button, wait_for_flutter, SCREENSHOT_DIR
 
 
@@ -89,8 +88,31 @@ def test_login_fail_wrong_password(page, test_config):
         6. Assert: URL still on login page OR error message shown
            (*Assert: URL vẫn ở trang đăng nhập HOẶC có thông báo lỗi*)
     """
-    # TODO: Students implement here (Sinh viên viết code ở đây)
-    pytest.skip("Not implemented — student must complete (Chưa hoàn thành)")
+    # [R] Reachability: truy cập trang đăng nhập
+    page.goto(test_config["base_url"], wait_until="networkidle", timeout=60000)
+    enable_flutter_semantics(page)
+
+    # [I] Infection: email đúng nhưng mật khẩu SAI (theo docs/test-accounts.md)
+    flutter_fill(page, "Email", test_config["email"])
+    flutter_fill(page, "Mật khẩu", "wrongpassword")
+    flutter_click_button(page, "Đăng nhập")
+
+    # [P] Propagation: chờ thông báo lỗi (SRS REQ-01) lan truyền ra UI
+    try:
+        wait_for_flutter(page, text="Mật khẩu không đúng", timeout=8000)
+    except Exception:
+        pass  # nếu không thấy -> assert bên dưới sẽ FAIL và lộ bug
+    enable_flutter_semantics(page)
+    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "login_fail_wrong_password.png"))
+
+    # [R✓] Strong Oracle — SRS REQ-01: sai mật khẩu PHẢI hiện "Mật khẩu không đúng"
+    sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
+    assert "Mật khẩu không đúng" in sem_text, \
+        f"SRS REQ-01: kỳ vọng thông báo 'Mật khẩu không đúng' khi nhập sai mật khẩu. " \
+        f"Thực tế semantics: {sem_text[:200]}"
+    # ...và KHÔNG được đăng nhập thành công (không có nút Đăng xuất)
+    assert "Đăng xuất" not in sem_text, \
+        "Hệ thống đã đăng nhập dù mật khẩu sai (vi phạm SRS REQ-01)"
 
 
 def test_login_fail_empty_fields(page, test_config):
@@ -110,5 +132,26 @@ def test_login_fail_empty_fields(page, test_config):
            (*KHÔNG nhập Email/Mật khẩu — click "Đăng nhập" ngay*)
         4. Assert: URL still on login page (*Assert: URL vẫn ở trang đăng nhập*)
     """
-    # TODO: Students implement here (Sinh viên viết code ở đây)
-    pytest.skip("Not implemented — student must complete (Chưa hoàn thành)")
+    # [R] Reachability: truy cập trang đăng nhập
+    page.goto(test_config["base_url"], wait_until="networkidle", timeout=60000)
+    enable_flutter_semantics(page)
+
+    # [I] Infection: KHÔNG nhập Email/Mật khẩu — bấm Đăng nhập ngay
+    flutter_click_button(page, "Đăng nhập")
+
+    # [P] Propagation: chờ thông báo lỗi (SRS REQ-01) lan truyền ra UI
+    try:
+        wait_for_flutter(page, text="Vui lòng nhập email và mật khẩu", timeout=8000)
+    except Exception:
+        pass  # nếu không thấy -> assert bên dưới sẽ FAIL và lộ bug
+    enable_flutter_semantics(page)
+    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "login_fail_empty_fields.png"))
+
+    # [R✓] Strong Oracle — SRS REQ-01: bỏ trống PHẢI hiện "Vui lòng nhập email và mật khẩu"
+    sem_text = " ".join(page.locator("flt-semantics").all_text_contents())
+    assert "Vui lòng nhập email và mật khẩu" in sem_text, \
+        f"SRS REQ-01: kỳ vọng thông báo 'Vui lòng nhập email và mật khẩu' khi bỏ trống. " \
+        f"Thực tế semantics: {sem_text[:200]}"
+    # ...và vẫn ở trang đăng nhập (không có nút Đăng xuất)
+    assert "Đăng xuất" not in sem_text, \
+        "Hệ thống đã đăng nhập dù bỏ trống email/mật khẩu (vi phạm SRS REQ-01)"
