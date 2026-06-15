@@ -73,8 +73,6 @@ class WebTech:
         if self.evidence:
             lines.append(f"Bằng chứng: {', '.join(self.evidence)}")
         return "\n".join(lines)
-
-
 # ---------------------------------------------------------------------------
 # Detection logic
 # ---------------------------------------------------------------------------
