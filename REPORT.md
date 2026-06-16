@@ -1,10 +1,15 @@
-# REPORT — Báo cáo Kiểm thử Tự động (A2)
+## REPORT — Báo cáo Kiểm thử Tự động (A2)
+***
 
-**Nhóm**: Group 12 — Lớp 52ICT2012.L1 — HK2 2025-2026
-**Hệ thống test**: Quản lý mượn sách Thư viện ABC — https://stqa.rbc.vn (Flutter Web / CanvasKit)
-**Công cụ**: Python + Playwright + pytest
-**Tài khoản test (.env)**: `ba.nguyen@email.com` (MEM002 — Hoạt động, đang mượn BOOK003 theo Seed Data)
-**Link Github**: https://github.com/USTH-STQA-2026/stqa-automation-testing-stqa_group_12
+**Nhóm:** Group 12 — Lớp 52ICT2012.L1 — HK2 2025-2026
+
+**Hệ thống test:** Quản lý mượn sách Thư viện ABC — [https://stqa.rbc.vn](https://stqa.rbc.vn) (Flutter Web / CanvasKit)
+
+**Công cụ:** Python + Playwright + pytest
+
+**Tài khoản test (.env):** `ba.nguyen@email.com` (MEM002 — Hoạt động, đang mượn BOOK003 theo Seed Data)
+
+**Link Github:** [https://github.com/USTH-STQA-2026/stqa-automation-testing-stqa_group_12](https://github.com/USTH-STQA-2026/stqa-automation-testing-stqa_group_12)
 
 ---
 
