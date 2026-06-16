@@ -17,12 +17,15 @@ Hints (*Gợi ý*):
       (*Nút trả*)
 """
 import os
-import time
-import pytest
+import re
+from playwright.sync_api import expect
 from conftest import (
-    enable_flutter_semantics, flutter_fill, flutter_click_button,
+    enable_flutter_semantics, wait_for_flutter,
     login, SCREENSHOT_DIR,
 )
+
+BORROW_TAB = 'flt-semantics[role="tab"][aria-label="Mượn / Trả"]'
+ACTIVE_LOAN = 'flt-semantics[role="group"][aria-label*="Đang mượn"]'
 
 
 def test_borrow_book(page, test_config):
@@ -48,9 +51,43 @@ def test_borrow_book(page, test_config):
            (*Click nút "Mượn" — nút xác nhận trong dialog*)
         6. Assert: "Đang mượn" or "thành công" appears
            (*Assert: "Đang mượn" hoặc "thành công" xuất hiện*)
+
+    ⚠️ Lưu ý: test này cần tài khoản .env đang HOẠT ĐỘNG và chưa đạt giới hạn
+        3 sách (theo SRS REQ-04). Khuyến nghị ba.nguyen / dam.tran (docs/test-accounts.md).
     """
-    # TODO: Students implement here (Sinh viên viết code ở đây)
-    pytest.skip("Not implemented — student must complete (Chưa hoàn thành)")
+    # Arrange — đăng nhập
+    login(page, test_config)
+
+    # Act — tìm 1 cuốn sách "Có sẵn", lấy TÊN sách (dòng đầu của aria-label) để theo dõi
+    available = page.locator('flt-semantics[role="group"][aria-label*="Có sẵn"]').first
+    available.wait_for(state="attached", timeout=10000)
+    label = available.get_attribute("aria-label") or ""
+    book_title = label.split("\n")[0].strip()
+    assert book_title, f"Không lấy được tên sách từ card 'Có sẵn': {label!r}"
+
+    # Click nút "Mượn sách này" trong card sách đó
+    available.locator('flt-semantics[role="button"]:has-text("Mượn sách này")').first.click()
+
+    # Dialog xác nhận -> click nút "Mượn" (khớp CHÍNH XÁC, không khớp "Mượn sách này")
+    enable_flutter_semantics(page)
+    confirm = page.locator('flt-semantics[role="button"]').filter(
+        has_text=re.compile(r"^\s*Mượn\s*$")
+    )
+    confirm.first.wait_for(state="attached", timeout=8000)
+    confirm.first.click()
+
+    # Sang tab "Mượn / Trả" để kiểm chứng phiếu mượn mới (oracle tin cậy qua aria-label)
+    enable_flutter_semantics(page)
+    page.locator(BORROW_TAB).first.click()
+    wait_for_flutter(page, text=book_title, timeout=8000)
+    enable_flutter_semantics(page)
+    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "borrow_book.png"))
+
+    # Assert — Strong Oracle (SRS REQ-04): mượn thành công => có phiếu "Đang mượn" cho đúng cuốn vừa mượn
+    active = page.locator(ACTIVE_LOAN)
+    labels = [active.nth(i).get_attribute("aria-label") or "" for i in range(active.count())]
+    assert any(book_title in l for l in labels), \
+        f"SRS REQ-04: kỳ vọng có phiếu 'Đang mượn' cho {book_title!r}. Thực tế các phiếu: {labels}"
 
 
 def test_view_borrowed_books(page, test_config):
@@ -66,9 +103,33 @@ def test_view_borrowed_books(page, test_config):
         - Click tab: page.locator('flt-semantics[role="tab"][aria-label="Mượn / Trả"]')
         - Verify: books with "Đang mượn" in aria-label, or "Trả sách" button exists
           (*Kiểm tra: có sách với aria-label chứa "Đang mượn" hoặc có nút "Trả sách"*)
+
+    ⚠️ Lưu ý: dùng tài khoản đang có sách mượn. Theo Seed Data, ba.nguyen (MEM002)
+        đang mượn BOOK003 "Kiểm thử phần mềm nhập môn".
     """
-    # TODO: Students implement here (Sinh viên viết code ở đây)
-    pytest.skip("Not implemented — student must complete (Chưa hoàn thành)")
+    # Arrange — đăng nhập
+    login(page, test_config)
+
+    # Act — chuyển sang tab "Mượn / Trả"
+    tab = page.locator(BORROW_TAB).first
+    tab.wait_for(state="attached", timeout=10000)
+    tab.click()
+    wait_for_flutter(page, text="Đang mượn", timeout=8000)
+    enable_flutter_semantics(page)
+    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "view_borrowed_books.png"))
+
+    # Assert — Strong Oracle (SRS REQ-08: thành viên xem phiếu mượn CỦA MÌNH)
+    # Thông tin phiếu nằm trong aria-label của group "Đang mượn"
+    active = page.locator(ACTIVE_LOAN)
+    assert active.count() > 0, \
+        "Kỳ vọng có ít nhất 1 phiếu đang mượn. Kiểm tra tài khoản .env có đang mượn sách không."
+    label0 = active.first.get_attribute("aria-label") or ""
+    # 1) Đúng cuốn sách đang mượn theo Seed Data (ba.nguyen -> BR001 "Kiểm thử phần mềm nhập môn")
+    assert "Kiểm thử phần mềm nhập môn" in label0, \
+        f"SRS REQ-08: kỳ vọng thấy phiếu BR001 của chính mình. Thực tế: {label0!r}"
+    # 2) Phiếu đủ thông tin (REQ-08) và đúng là phiếu CỦA MÌNH (tên thành viên trùng)
+    assert "Mã phiếu" in label0 and test_config["display_name"] in label0, \
+        f"SRS REQ-08: phiếu thiếu thông tin hoặc không phải của mình: {label0!r}"
 
 
 def test_return_book(page, test_config):
@@ -86,6 +147,27 @@ def test_return_book(page, test_config):
           (*Tìm nút "Trả sách"*)
         - Click and verify status change or success message
           (*Click và kiểm tra sách chuyển trạng thái hoặc có thông báo thành công*)
+
+    ⚠️ Lưu ý: cần tài khoản đang có sách mượn (vd ba.nguyen — BOOK003 theo Seed Data).
     """
-    # TODO: Students implement here (Sinh viên viết code ở đây)
-    pytest.skip("Not implemented — student must complete (Chưa hoàn thành)")
+    # Arrange — đăng nhập + vào tab "Mượn / Trả"
+    login(page, test_config)
+    tab = page.locator(BORROW_TAB).first
+    tab.wait_for(state="attached", timeout=10000)
+    tab.click()
+    wait_for_flutter(page, text="Đang mượn", timeout=8000)
+    enable_flutter_semantics(page)
+
+    # Đếm số phiếu "Đang mượn" TRƯỚC khi trả (điều kiện tiên quyết)
+    active_loans = page.locator(ACTIVE_LOAN)
+    before = active_loans.count()
+    assert before > 0, "Cần có ít nhất 1 phiếu 'Đang mượn' để kiểm thử trả sách"
+
+    # Act — click nút "Trả sách" đầu tiên (hệ thống trả ngay, không có dialog xác nhận)
+    page.locator('flt-semantics[role="button"]:has-text("Trả sách")').first.click()
+    enable_flutter_semantics(page)
+    page.screenshot(path=os.path.join(SCREENSHOT_DIR, "return_book.png"))
+
+    # Assert — Strong Oracle (SRS REQ-05): trả thành công => số phiếu "Đang mượn" giảm đúng 1
+    # (expect tự động chờ tới khi Semantics Tree cập nhật — Smart Wait, không dùng time.sleep)
+    expect(active_loans).to_have_count(before - 1, timeout=8000)
